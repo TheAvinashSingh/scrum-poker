@@ -7,11 +7,14 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Add CORS headers for Vercel deployment
+// Add CORS headers for any deployment
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
+  const origin = req.headers.origin;
+  // Allow the origin that sent the request or allow all in development
+  res.header("Access-Control-Allow-Origin", origin || "*");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE");
+  res.header("Access-Control-Allow-Credentials", "true");
   
   // Handle preflight requests
   if (req.method === 'OPTIONS') {
@@ -19,6 +22,11 @@ app.use((req, res, next) => {
   }
   
   next();
+});
+
+// Add health check endpoint for deployments
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
 });
 
 // Logging middleware
@@ -75,17 +83,17 @@ app.use((req, res, next) => {
       serveStatic(app);
     }
 
-    // For non-Vercel environments, start the server on port 5000
-    if (process.env.VERCEL !== "1") {
-      const port = process.env.PORT || 5000;
-      server.listen({
-        port,
-        host: "0.0.0.0",
-        reusePort: true,
-      }, () => {
-        log(`serving on port ${port}`);
-      });
-    }
+    // Start the server on all environments (can be disabled for specialized platforms)
+    const port = process.env.PORT || 5000;
+    server.listen({
+      port,
+      host: "0.0.0.0",
+      // Use reusePort if available, but don't fail if not supported
+      ...((process.env.NODE_ENV === "production") ? { reusePort: true } : {})
+    }, () => {
+      log(`Server running on port ${port}`);
+      log(`Server URL: http://localhost:${port}`);
+    });
   } catch (error) {
     console.error("Error initializing application:", error);
     process.exit(1); // Exit if initialization fails

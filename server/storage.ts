@@ -38,6 +38,9 @@ export class MemStorage implements IStorage {
     this.votes = new Map();
     this.userId = 1;
     this.voteId = 1;
+    
+    // Log initialization for debugging
+    console.log('In-memory storage initialized');
   }
 
   // User operations

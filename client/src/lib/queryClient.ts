@@ -2,12 +2,8 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
 // Get the correct base URL depending on environment
 function getBaseUrl() {
-  // Check if we're in a production environment (like Vercel)
-  if (import.meta.env.PROD) {
-    return window.location.origin;
-  }
-  // Default to localhost for development
-  return import.meta.env.DEV ? 'http://localhost:5000' : window.location.origin;
+  // In production, use the same origin as the page
+  return window.location.origin;
 }
 
 async function throwIfResNotOk(res: Response) {
