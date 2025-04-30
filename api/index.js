@@ -29,6 +29,11 @@ app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
 });
 
+// Health check without /api prefix for root route checking
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
+
 // Simple session creation with in-memory storage
 const sessions = new Map();
 const users = new Map();

@@ -48,20 +48,57 @@
     }
   </style>
   <script>
+    // Tracking retry attempts to avoid infinite loop
+    let retryCount = 0;
+    const maxRetries = 5;
+    
     // Check if the API is available
     async function checkApi() {
       try {
-        const response = await fetch('/api/health');
-        if (response.ok) {
-          window.location.href = '/';
+        // Increment retry counter
+        retryCount++;
+        
+        // Try both health endpoints
+        let response;
+        try {
+          response = await fetch('/health');
+        } catch {
+          try {
+            response = await fetch('/api/health');
+          } catch (e) {
+            throw new Error('Both health endpoints failed');
+          }
+        }
+        
+        if (response && response.ok) {
+          // If successful, redirect to the main app
+          window.location.href = window.location.pathname === '/index.html' 
+            ? '/' 
+            : window.location.pathname;
         } else {
-          document.getElementById('status').textContent = 'API not responding properly. Retrying...';
-          setTimeout(checkApi, 3000);
+          handleRetry('API not responding properly');
         }
       } catch (error) {
-        document.getElementById('status').textContent = 'Error connecting to API. Retrying...';
-        setTimeout(checkApi, 3000);
+        handleRetry('Error connecting to API');
       }
+    }
+    
+    function handleRetry(message) {
+      if (retryCount < maxRetries) {
+        document.getElementById('status').textContent = `${message}. Retrying (${retryCount}/${maxRetries})...`;
+        setTimeout(checkApi, 3000);
+      } else {
+        // After max retries, show manual refresh option
+        document.getElementById('status').textContent = 'Could not connect to API after multiple attempts.';
+        document.getElementById('refresh-button').style.display = 'inline-block';
+      }
+    }
+    
+    function manualRefresh() {
+      retryCount = 0;
+      document.getElementById('refresh-button').style.display = 'none';
+      document.getElementById('status').textContent = 'Checking API connection...';
+      checkApi();
     }
     
     // Start checking once page is loaded
@@ -80,6 +117,12 @@
     <p>
       The Scrum Poker application is initializing. This may take a moment on the first load.
     </p>
+    <button 
+      id="refresh-button" 
+      onClick="manualRefresh()" 
+      style="display: none; background-color: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin-top: 20px;">
+      Try Again
+    </button>
   </div>
 </body>
 </html>
