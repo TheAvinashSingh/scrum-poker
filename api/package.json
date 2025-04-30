@@ -1,0 +1,9 @@
+{
+  "name": "scrum-poker-api",
+  "version": "1.0.0",
+  "description": "Scrum Poker API for Vercel",
+  "main": "index.js",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
