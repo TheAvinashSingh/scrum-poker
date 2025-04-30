@@ -1,12 +1,13 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
+import { SessionResponse } from '@shared/schema';
 
 export function useSessionPolling(sessionId: string | undefined) {
   const queryClient = useQueryClient();
   const pollInterval = useRef<number | null>(null);
 
   // Query to fetch session data
-  const query = useQuery({
+  const query = useQuery<SessionResponse>({
     queryKey: [`/api/sessions/${sessionId}`],
     enabled: !!sessionId,
     refetchOnWindowFocus: true,

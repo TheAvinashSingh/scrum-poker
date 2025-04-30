@@ -195,6 +195,7 @@ export class MemStorage implements IStorage {
       id: session.id,
       votingActive: session.votingActive,
       showResults: session.showResults,
+      active: session.active,
       participants,
       average,
       consensus,

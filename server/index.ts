@@ -54,34 +54,41 @@ app.use((req, res, next) => {
 
 // Initialize application
 (async () => {
-  const server = await registerRoutes(app);
+  try {
+    const server = await registerRoutes(app);
 
-  // Error handling middleware
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+    // Error handling middleware - must be after route registration
+    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+      console.error("Express error handler:", err);
+      const status = err.status || err.statusCode || 500;
+      const message = err.message || "Internal Server Error";
 
-    res.status(status).json({ message });
-    console.error(err);
-  });
-
-  // Serve static files or setup development environment
-  if (process.env.NODE_ENV === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
-  }
-
-  // For non-Vercel environments, start the server on port 5000
-  if (process.env.VERCEL !== "1") {
-    const port = process.env.PORT || 5000;
-    server.listen({
-      port,
-      host: "0.0.0.0",
-      reusePort: true,
-    }, () => {
-      log(`serving on port ${port}`);
+      if (!res.headersSent) {
+        res.status(status).json({ message });
+      }
     });
+
+    // Serve static files or setup development environment
+    if (process.env.NODE_ENV === "development") {
+      await setupVite(app, server);
+    } else {
+      serveStatic(app);
+    }
+
+    // For non-Vercel environments, start the server on port 5000
+    if (process.env.VERCEL !== "1") {
+      const port = process.env.PORT || 5000;
+      server.listen({
+        port,
+        host: "0.0.0.0",
+        reusePort: true,
+      }, () => {
+        log(`serving on port ${port}`);
+      });
+    }
+  } catch (error) {
+    console.error("Error initializing application:", error);
+    process.exit(1); // Exit if initialization fails
   }
 })();
 

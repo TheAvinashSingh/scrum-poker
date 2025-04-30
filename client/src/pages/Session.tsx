@@ -11,6 +11,7 @@ import { useSessionPolling } from "@/hooks/useSessionPolling";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SessionResponse, ParticipantResponse } from "@shared/schema";
 
 export default function Session() {
   const { sessionId } = useParams();
@@ -38,7 +39,7 @@ export default function Session() {
   }, [sessionId, setLocation]);
 
   // Use polling to get session updates
-  const sessionQuery = useSessionPolling(sessionId);
+  const sessionQuery = useSessionPolling(sessionId || "");
 
   // Vote mutation
   const voteMutation = useMutation({
@@ -118,9 +119,30 @@ export default function Session() {
       </div>
     );
   }
+  
+  // Check if the session is inactive
+  if (sessionQuery.data && !sessionQuery.data.active) {
+    return (
+      <div className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <Alert variant="destructive" className="mb-4">
+          <AlertTitle>Session Ended</AlertTitle>
+          <AlertDescription>
+            This session has been ended by the host and is no longer available.
+          </AlertDescription>
+        </Alert>
+        <Button onClick={() => {
+          // Clear the session from local storage
+          localStorage.removeItem(`session_${sessionId}`);
+          setLocation("/");
+        }}>
+          Return to Home
+        </Button>
+      </div>
+    );
+  }
 
   // Variables for session state
-  const session = sessionQuery.data;
+  const session = sessionQuery.data as SessionResponse;
   const isVotingActive = session.votingActive;
   const isShowingResults = session.showResults;
   const myParticipant = session.participants.find(p => p.id === userInfo.userId);
@@ -133,12 +155,12 @@ export default function Session() {
     <main className="flex-grow w-full">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Host Controls */}
-        {userInfo.isHost && (
+        {userInfo.isHost && sessionId && (
           <HostControls 
             sessionId={sessionId} 
             sessionData={session}
             userId={userInfo.userId}
-            onUpdate={sessionQuery.refetch}
+            onUpdate={() => sessionQuery.refetch()}
           />
         )}
 

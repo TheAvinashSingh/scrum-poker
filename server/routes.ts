@@ -16,10 +16,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create a new session
   app.post("/api/sessions", async (req, res) => {
     try {
+      console.log("Create session request:", req.body);
       const { sessionId, username } = createSessionSchema.parse(req.body);
+      console.log("Parsed input:", { sessionId, username });
       
       // Generate session ID if not provided
       const finalSessionId = sessionId || generateSessionId();
+      console.log("Final session ID:", finalSessionId);
       
       // Check if session ID already exists
       const existingSession = await storage.getSession(finalSessionId);
@@ -35,6 +38,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         votingActive: false,
         showResults: false
       });
+      console.log("New session created:", newSession);
       
       // Create host user
       const newUser = await storage.createUser({
@@ -42,22 +46,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sessionId: finalSessionId,
         isHost: true
       });
+      console.log("New host user created:", newUser);
       
       // Update session with host ID
-      await storage.updateSession(finalSessionId, { hostId: newUser.id });
+      const updatedSession = await storage.updateSession(finalSessionId, { hostId: newUser.id });
+      console.log("Session updated with host ID:", updatedSession);
       
       // Return session with user
-      const session = await storage.getSessionWithDetails(finalSessionId);
+      const sessionDetails = await storage.getSessionWithDetails(finalSessionId);
+      console.log("Final session details:", sessionDetails);
+      
       res.status(201).json({ 
-        session,
+        session: sessionDetails,
         userId: newUser.id,
         isHost: true
       });
     } catch (error) {
+      console.error("Error creating session:", error);
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: error.errors });
       }
-      res.status(500).json({ message: "Internal server error" });
+      res.status(500).json({ message: error instanceof Error ? error.message : "Internal server error" });
     }
   });
 
@@ -168,7 +177,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { sessionId } = req.params;
       const { userId } = req.query;
-      const { votingActive, showResults } = req.body;
+      const { votingActive, showResults, active } = req.body;
       
       if (!userId || typeof userId !== 'string') {
         return res.status(400).json({ message: "User ID is required" });
@@ -197,6 +206,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         updates.showResults = showResults;
       }
       
+      // Handle ending the session
+      if (typeof active === 'boolean') {
+        updates.active = active;
+        // If ending the session, also end voting and show results
+        if (active === false) {
+          updates.votingActive = false;
+          updates.showResults = true;
+        }
+      }
+      
       // Reset votes if starting a new round
       if (votingActive === true && showResults === false) {
         await storage.deleteVotesBySessionId(sessionId);
@@ -208,7 +227,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updatedSession = await storage.getSessionWithDetails(sessionId);
       res.status(200).json(updatedSession);
     } catch (error) {
-      res.status(500).json({ message: "Internal server error" });
+      console.error("Error updating session:", error);
+      res.status(500).json({ message: error instanceof Error ? error.message : "Internal server error" });
     }
   });
 

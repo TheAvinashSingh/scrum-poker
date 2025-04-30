@@ -86,6 +86,7 @@ export type SessionResponse = {
   id: string;
   votingActive: boolean;
   showResults: boolean;
+  active: boolean;
   participants: ParticipantResponse[];
   average?: number;
   consensus?: string;
