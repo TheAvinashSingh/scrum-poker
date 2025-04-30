@@ -1,5 +1,15 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
+// Get the correct base URL depending on environment
+function getBaseUrl() {
+  // Check if we're in a production environment (like Vercel)
+  if (import.meta.env.PROD) {
+    return window.location.origin;
+  }
+  // Default to localhost for development
+  return import.meta.env.DEV ? 'http://localhost:5000' : window.location.origin;
+}
+
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
@@ -13,7 +23,13 @@ export async function apiRequest(
   data?: unknown | undefined,
 ): Promise<Response> {
   try {
-    const res = await fetch(url, {
+    // Make sure URL is absolute for production or development
+    const baseUrl = getBaseUrl();
+    const fullUrl = url.startsWith('/') ? `${baseUrl}${url}` : url;
+    
+    console.log(`Making ${method} request to: ${fullUrl}`);
+    
+    const res = await fetch(fullUrl, {
       method,
       headers: data ? { 
         "Content-Type": "application/json",
@@ -39,7 +55,14 @@ export const getQueryFn: <T>(options: {
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
     try {
-      const res = await fetch(queryKey[0] as string, {
+      // Make sure URL is absolute for production or development
+      const baseUrl = getBaseUrl();
+      const url = queryKey[0] as string;
+      const fullUrl = url.startsWith('/') ? `${baseUrl}${url}` : url;
+      
+      console.log(`Making query request to: ${fullUrl}`);
+      
+      const res = await fetch(fullUrl, {
         credentials: "include",
         headers: {
           "Cache-Control": "no-cache",

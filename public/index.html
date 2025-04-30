@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Scrum Poker</title>
+  <title>Scrum Poker - Loading</title>
   <style>
     body, html {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -33,31 +33,53 @@
       margin-bottom: 2rem;
       line-height: 1.6;
     }
-    .button {
+    .loader {
       display: inline-block;
-      background-color: #3498db;
-      color: white;
-      padding: 0.75rem 1.5rem;
-      border-radius: 4px;
-      text-decoration: none;
-      font-weight: 500;
-      transition: background-color 0.2s;
+      width: 50px;
+      height: 50px;
+      border: 5px solid rgba(0, 0, 0, 0.1);
+      border-radius: 50%;
+      border-top-color: #3498db;
+      animation: spin 1s ease-in-out infinite;
+      margin-bottom: 1rem;
     }
-    .button:hover {
-      background-color: #2980b9;
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
   </style>
+  <script>
+    // Check if the API is available
+    async function checkApi() {
+      try {
+        const response = await fetch('/api/health');
+        if (response.ok) {
+          window.location.href = '/';
+        } else {
+          document.getElementById('status').textContent = 'API not responding properly. Retrying...';
+          setTimeout(checkApi, 3000);
+        }
+      } catch (error) {
+        document.getElementById('status').textContent = 'Error connecting to API. Retrying...';
+        setTimeout(checkApi, 3000);
+      }
+    }
+    
+    // Start checking once page is loaded
+    window.onload = function() {
+      checkApi();
+    };
+  </script>
 </head>
 <body>
   <div class="container">
     <h1>Scrum Poker</h1>
-    <p>
-      This is a placeholder page. Please deploy your Scrum Poker application through your regular deployment flow.
+    <div class="loader"></div>
+    <p id="status">
+      Loading the application, please wait...
     </p>
     <p>
-      If you're seeing this page on Vercel, please check your deployment settings or contact support.
+      The Scrum Poker application is initializing. This may take a moment on the first load.
     </p>
-    <a class="button" href="javascript:history.back()">Go Back</a>
   </div>
 </body>
 </html>

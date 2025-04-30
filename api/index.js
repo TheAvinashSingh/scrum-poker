@@ -2,6 +2,25 @@
 const express = require('express');
 const app = express();
 
+// Add CORS middleware for Vercel environment
+app.use((req, res, next) => {
+  // Allow requests from any origin in development
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  // Allow common HTTP methods
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  // Allow common headers
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  // Allow credentials
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  
+  next();
+});
+
 // Middleware
 app.use(express.json());
 
