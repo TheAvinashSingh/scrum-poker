@@ -1,7 +1,6 @@
-.git
-.github
 node_modules
-README.md
-.replit
-.replit.nix
-replit.nix
+.git
+dist
+!dist/index.html
+!dist/assets
+server
