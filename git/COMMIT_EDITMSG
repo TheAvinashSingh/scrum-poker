@@ -1,0 +1,7 @@
+Improve data loading and API communication for more reliable performance
+
+Implement try/catch blocks, add CORS mode, set "Cache-Control" and configure retry/staleTime for API requests and queries.
+
+Replit-Commit-Author: Agent
+Replit-Commit-Session-Id: 5e48eb6c-6512-4683-bb27-2341271132ac
+Replit-Commit-Screenshot-Url: https://storage.googleapis.com/screenshot-production-us-central1/be2f07c9-bb7a-462a-93a9-aea1ed67c5af/11a9fab6-5ea0-45ba-939a-59b5bc9e63f7.jpg
